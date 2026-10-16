@@ -1,9 +1,9 @@
-import { useStaySearch, useStayOffers, formatInr, freshness, nightsBetween, type StaySearchParams } from '@tc/core';
+import { formatInr, freshness, nightsBetween, useStayOffers, useStaySearch, type StaySearchParams } from '@tc/core';
 import type { StayOffer, StayProperty, StayType } from '@tc/types';
-import { BadgeCheck, ExternalLink, Home, Hotel, Star, TrendingDown } from 'lucide-react';
+import { BadgeCheck, ExternalLink, Home, Hotel, Star } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { errorMessage } from '@/lib/utils';
-import { Badge, Button, Card, ErrorNote, Input, Label, Select, Sheet, Spinner } from './ui';
+import { cn, errorMessage } from '@/lib/utils';
+import { Badge, Button, EmptyState, ErrorNote, Input, Label, Segmented, Select, Sheet, Skeleton, Spinner } from './ui';
 
 interface Props {
   destinationId: string;
@@ -39,91 +39,98 @@ export function StaysPanel(props: Props) {
     [search.data, minRating],
   );
   const nights = nightsBetween(props.checkIn, props.checkOut);
+  const guests = props.adults + props.children;
 
   return (
-    <div className="space-y-4">
-      <Card className="flex flex-wrap items-end gap-3 p-4">
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-end gap-x-4 gap-y-3 border-b border-line pb-4">
         <div>
-          <Label>Stay type</Label>
-          <div className="flex gap-1 rounded-lg bg-stone-100 p-1">
-            {(['hotel', 'villa'] as const).map((t) => (
-              <button
-                key={t}
-                onClick={() => setType(t)}
-                className={`flex items-center gap-1 rounded-md px-3 py-1.5 text-sm ${type === t ? 'bg-white shadow-sm' : 'text-stone-600'}`}
-              >
-                {t === 'hotel' ? <Hotel className="h-4 w-4" /> : <Home className="h-4 w-4" />}
-                {t === 'hotel' ? 'Hotels' : 'Villas & homes'}
-              </button>
-            ))}
-          </div>
+          <p className="eyebrow mb-1.5">Stay type</p>
+          <Segmented<StayType>
+            value={type}
+            onChange={setType}
+            options={[
+              { id: 'hotel', label: <><Hotel className="h-4 w-4" /> Hotels</> },
+              { id: 'villa', label: <><Home className="h-4 w-4" /> Villas & homes</> },
+            ]}
+          />
         </div>
         <div>
-          <Label>Sort</Label>
-          <Select value={sort} onChange={(e) => setSort(e.target.value as StaySearchParams['sort'])}>
+          <Label htmlFor="stay-sort">Sort</Label>
+          <Select id="stay-sort" value={sort} onChange={(e) => setSort(e.target.value as StaySearchParams['sort'])}>
             <option value="lowest_price">Lowest price</option>
             <option value="highest_rating">Highest rating</option>
             <option value="relevance">Relevance</option>
           </Select>
         </div>
         <div className="w-36">
-          <Label>Max / night (₹)</Label>
-          <Input inputMode="numeric" placeholder="Any" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value.replace(/\D/g, ''))} />
+          <Label htmlFor="stay-max">Max ₹ / night</Label>
+          <Input id="stay-max" inputMode="numeric" placeholder="Any" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value.replace(/\D/g, ''))} />
         </div>
         <div>
-          <Label>Min rating</Label>
-          <Select value={minRating} onChange={(e) => setMinRating(Number(e.target.value))}>
+          <Label htmlFor="stay-rating">Rating</Label>
+          <Select id="stay-rating" value={minRating} onChange={(e) => setMinRating(Number(e.target.value))}>
             <option value={0}>Any</option>
             <option value={3.5}>3.5+</option>
             <option value={4}>4.0+</option>
             <option value={4.5}>4.5+</option>
           </Select>
         </div>
-        <div className="ml-auto text-right text-xs text-stone-500">
-          {props.destinationName} · {nights} night{nights === 1 ? '' : 's'} · {props.adults + props.children} guests
-          {search.data && <div>Live prices fetched {freshness(search.data.fetchedAt)}</div>}
+        <div className="ml-auto text-right">
+          <p className="eyebrow">
+            {props.destinationName} · {nights} night{nights === 1 ? '' : 's'} · {guests} guest{guests === 1 ? '' : 's'}
+          </p>
+          {search.data && <p className="text-sm text-muted">Live prices, fetched {freshness(search.data.fetchedAt)}</p>}
         </div>
-      </Card>
+      </div>
 
-      {search.isLoading && <Spinner label="Fetching live prices across platforms…" />}
       {search.error && <ErrorNote onRetry={() => search.refetch()}>{errorMessage(search.error)}</ErrorNote>}
       {search.data && properties.length === 0 && (
-        <p className="p-6 text-center text-stone-500">No {type === 'villa' ? 'villas' : 'hotels'} found for these dates and filters.</p>
+        <EmptyState title={`No ${type === 'villa' ? 'villas or homes' : 'hotels'} match`}>Try other dates, a higher price limit or a lower rating.</EmptyState>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" data-testid="stay-results">
+      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3" data-testid="stay-results">
+        {search.isLoading &&
+          Array.from({ length: 6 }, (_, i) => (
+            <div key={i} className="space-y-3">
+              <Skeleton className="aspect-[3/2] w-full" />
+              <Skeleton className="h-5 w-3/4" />
+              <Skeleton className="h-4 w-1/2" />
+            </div>
+          ))}
         {properties.map((p) => (
-          <Card key={p.propertyToken} className="flex flex-col overflow-hidden">
-            {p.images[0] ? (
-              <img src={p.images[0]} alt={p.name} loading="lazy" className="h-44 w-full object-cover" referrerPolicy="no-referrer" />
-            ) : (
-              <div className="h-44 bg-stone-100" />
-            )}
+          <article key={p.propertyToken} className="flex flex-col overflow-hidden rounded-lg border border-line bg-surface">
+            <div className="aspect-[3/2] bg-sunken">
+              {p.images[0] && <img src={p.images[0]} alt="" loading="lazy" className="h-full w-full object-cover" referrerPolicy="no-referrer" />}
+            </div>
             <div className="flex flex-1 flex-col gap-2 p-4">
-              <div className="flex items-start justify-between gap-2">
-                <h3 className="font-semibold leading-tight">{p.name}</h3>
+              <div className="flex items-start justify-between gap-3">
+                <h3 className="font-sans text-[17px] font-bold leading-snug">{p.name}</h3>
                 {p.rating != null && (
-                  <Badge tone="green"><Star className="h-3 w-3 fill-current" /> {p.rating.toFixed(1)}</Badge>
+                  <Badge tone="good" className="shrink-0">
+                    <Star className="h-3 w-3 fill-current" /> {p.rating.toFixed(1)}
+                  </Badge>
                 )}
               </div>
-              <div className="text-xs text-stone-500">
-                {[p.hotelClass ? `${p.hotelClass}-star` : p.type, p.reviews ? `${p.reviews.toLocaleString('en-IN')} reviews` : null]
-                  .filter(Boolean)
-                  .join(' · ')}
-              </div>
-              <div className="flex flex-wrap gap-1">
-                {p.amenities.slice(0, 4).map((a) => <Badge key={a}>{a}</Badge>)}
-              </div>
-              <div className="mt-auto flex items-end justify-between pt-2">
+              <p className="text-sm text-muted">
+                {[p.hotelClass ? `${p.hotelClass}-star` : p.type, p.reviews ? `${p.reviews.toLocaleString('en-IN')} reviews` : null].filter(Boolean).join(' · ')}
+              </p>
+              {p.amenities.length > 0 && <p className="line-clamp-1 text-sm text-muted">{p.amenities.slice(0, 4).join(' · ')}</p>}
+              <div className="mt-auto flex items-end justify-between gap-3 border-t border-line pt-3">
                 <div>
-                  <div className="text-xs text-stone-500">from</div>
-                  <div className="text-xl font-bold">{formatInr(p.lowestNightlyInr)}<span className="text-sm font-normal text-stone-500">/night</span></div>
-                  {p.lowestTotalInr != null && <div className="text-xs text-stone-500">{formatInr(p.lowestTotalInr)} total</div>}
+                  <p className="eyebrow">From</p>
+                  <p className="num font-mono text-xl font-semibold">
+                    {formatInr(p.lowestNightlyInr)}
+                    <span className="font-sans text-sm font-normal text-muted"> /night</span>
+                  </p>
+                  {p.lowestTotalInr != null && <p className="num font-mono text-xs text-muted">{formatInr(p.lowestTotalInr)} total</p>}
                 </div>
-                <Button size="sm" onClick={() => setSelected(p)}>Compare prices</Button>
+                <Button size="sm" onClick={() => setSelected(p)}>
+                  Compare prices
+                </Button>
               </div>
             </div>
-          </Card>
+          </article>
         ))}
       </div>
 
@@ -153,58 +160,98 @@ function CompareSheet({
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const data = offers.data;
+  const maxTotal = Math.max(0, ...(data?.offers ?? []).map((o) => o.totalInr ?? 0));
 
   return (
-    <Sheet open={!!property} onClose={() => { setSaved(false); onClose(); }} title={property?.name ?? ''}>
-      {offers.isLoading && <Spinner label="Comparing every platform live…" />}
+    <Sheet
+      open={!!property}
+      onClose={() => {
+        setSaved(false);
+        onClose();
+      }}
+      title={property?.name ?? ''}
+      subtitle={data?.address}
+    >
+      {offers.isLoading && <Spinner label="Checking every booking site…" />}
       {offers.error && <ErrorNote onRetry={() => offers.refetch()}>{errorMessage(offers.error)}</ErrorNote>}
       {data && (
-        <div className="space-y-4" data-testid="compare-table">
-          <div className="text-sm text-stone-600">
-            {data.address && <div>{data.address}</div>}
-            <div>
-              {data.checkIn} → {data.checkOut} · {data.nights} night{data.nights === 1 ? '' : 's'} · fetched {freshness(data.fetchedAt)}
+        <div className="space-y-5" data-testid="compare-table">
+          <div className="overflow-hidden rounded-xl border border-line bg-surface">
+            <div className="flex flex-wrap items-center justify-between gap-2 px-5 py-3">
+              <p className="eyebrow">
+                {data.checkIn} → {data.checkOut}
+              </p>
+              <p className="eyebrow">
+                {data.nights} night{data.nights === 1 ? '' : 's'} · fetched {freshness(data.fetchedAt)}
+              </p>
             </div>
-          </div>
-          {data.cheapest && (
-            <Card className="flex items-center justify-between border-green-200 bg-green-50 p-4">
-              <div>
-                <div className="flex items-center gap-1 text-sm font-medium text-green-800"><TrendingDown className="h-4 w-4" /> Lowest price</div>
-                <div className="text-2xl font-bold">{formatInr(data.cheapest.totalInr)} <span className="text-sm font-normal">on {data.cheapest.platform}</span></div>
-                {!!data.maxSavingsInr && <div className="text-xs text-green-800">Save up to {formatInr(data.maxSavingsInr)} vs. the most expensive option</div>}
+            {data.cheapest ? (
+              <div className="perforation mx-5 flex flex-wrap items-end justify-between gap-4 py-5">
+                <div>
+                  <p className="text-sm font-semibold text-highlight">Lowest price for your dates</p>
+                  <p className="num mt-1 font-mono text-4xl font-semibold leading-none">{formatInr(data.cheapest.totalInr)}</p>
+                  <p className="mt-2 text-sm text-muted">
+                    on <span className="font-semibold text-ink">{data.cheapest.platform}</span>
+                    {!!data.maxSavingsInr && <> · saves up to <span className="num font-mono text-good">{formatInr(data.maxSavingsInr)}</span></>}
+                  </p>
+                </div>
+                <a href={data.cheapest.redirectUrl ?? data.cheapest.deepLink} target="_blank" rel="noopener noreferrer">
+                  <Button>
+                    Go to {data.cheapest.platform} <ExternalLink className="h-4 w-4" />
+                  </Button>
+                </a>
               </div>
-              <a href={data.cheapest.redirectUrl ?? data.cheapest.deepLink} target="_blank" rel="noopener noreferrer">
-                <Button>Go to {data.cheapest.platform} <ExternalLink className="h-4 w-4" /></Button>
-              </a>
-            </Card>
-          )}
-          {data.offers.length === 0 && <p className="text-stone-500">No platform currently lists prices for these dates.</p>}
-          <table className="w-full text-sm">
-            <thead className="text-left text-xs uppercase text-stone-500">
-              <tr><th className="py-2">Platform</th><th>Per night</th><th>Total</th><th /></tr>
-            </thead>
-            <tbody>
-              {data.offers.map((o) => (
-                <tr key={o.platform} className={`border-t ${o.cheapest ? 'bg-green-50' : ''}`}>
-                  <td className="py-3">
-                    <div className="flex items-center gap-2">
-                      {o.platformLogo && <img src={o.platformLogo} alt="" className="h-5 w-5 rounded" />}
-                      <span className="font-medium">{o.platform}</span>
-                      {o.official && <Badge tone="blue"><BadgeCheck className="h-3 w-3" /> Official site</Badge>}
-                      {o.freeCancellation && <Badge tone="green">Free cancellation</Badge>}
+            ) : (
+              <p className="perforation mx-5 py-5 text-muted">No booking site lists a price for these dates.</p>
+            )}
+          </div>
+
+          {data.offers.length > 0 && (
+            <section>
+              <h3 className="eyebrow mb-2">
+                {data.offers.length} site{data.offers.length === 1 ? '' : 's'}, cheapest first
+              </h3>
+              <ul className="divide-y divide-line rounded-lg border border-line bg-surface">
+                {data.offers.map((o) => (
+                  <li key={o.platform} className="grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-2 px-4 py-3">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        {o.platformLogo && <img src={o.platformLogo} alt="" className="h-5 w-5 rounded-sm" />}
+                        <span className="font-semibold">{o.platform}</span>
+                        {o.cheapest && <Badge tone="highlight">Cheapest</Badge>}
+                        {o.official && (
+                          <Badge tone="accent">
+                            <BadgeCheck className="h-3 w-3" /> Hotel's own site
+                          </Badge>
+                        )}
+                        {o.freeCancellation && <Badge tone="good">Free cancellation</Badge>}
+                      </div>
+                      {o.totalInr != null && maxTotal > 0 && (
+                        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-sunken" aria-hidden>
+                          <div
+                            className={cn('h-full rounded-full', o.cheapest ? 'bg-highlight' : 'bg-muted/40')}
+                            style={{ width: `${Math.max(8, (o.totalInr / maxTotal) * 100)}%` }}
+                          />
+                        </div>
+                      )}
                     </div>
-                  </td>
-                  <td>{formatInr(o.nightlyInr)}</td>
-                  <td className="font-semibold">{formatInr(o.totalInr)}</td>
-                  <td className="text-right">
-                    <a href={o.redirectUrl ?? o.deepLink} target="_blank" rel="noopener noreferrer">
-                      <Button size="sm" variant={o.cheapest ? 'primary' : 'outline'}>Go to site <ExternalLink className="h-3 w-3" /></Button>
-                    </a>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                    <div className="row-span-2 flex items-center gap-3">
+                      <div className="text-right">
+                        <p className="num font-mono font-semibold">{formatInr(o.totalInr)}</p>
+                        <p className="num font-mono text-xs text-muted">{formatInr(o.nightlyInr)}/night</p>
+                      </div>
+                      <a href={o.redirectUrl ?? o.deepLink} target="_blank" rel="noopener noreferrer" aria-label={`Go to ${o.platform}`}>
+                        <Button size="sm" variant={o.cheapest ? 'primary' : 'outline'}>
+                          Go <ExternalLink className="h-3 w-3" />
+                        </Button>
+                      </a>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
           {onSave && (
             <Button
               variant="secondary"
@@ -221,11 +268,11 @@ function CompareSheet({
                 }
               }}
             >
-              {saved ? 'Saved to trip ✓' : 'Save this stay to my trip'}
+              {saved ? 'Saved to your trip' : 'Save this stay to my trip'}
             </Button>
           )}
-          <p className="text-xs text-stone-500">
-            Prices include taxes where the platform reports them. The final price is confirmed on the provider's site.
+          <p className="text-xs text-muted">
+            Totals include taxes where the site reports them. You confirm the final price on the booking site.
           </p>
         </div>
       )}

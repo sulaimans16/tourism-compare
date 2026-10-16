@@ -15,7 +15,8 @@ export interface MapPoint {
 }
 
 /** Brand-adjacent colours, one per itinerary day. */
-export const DAY_COLORS = ['#c2410c', '#0369a1', '#15803d', '#7c3aed', '#b45309', '#be123c', '#0f766e', '#4338ca'];
+/** One colour per itinerary day (peacock, marigold, kumkum, leaf…); legible on light and dark. */
+export const DAY_COLORS = ['#0B7F87', '#C47F0A', '#B83A4B', '#3E7D3A', '#5B5BB8', '#A0522D', '#2F6F9F', '#8A4F9E'];
 
 function FitBounds({ points }: { points: MapPoint[] }) {
   const map = useMap();
@@ -40,7 +41,7 @@ export function PlacesMap({ points, center, height = 320 }: { points: MapPoint[]
   const [open, setOpen] = useState<MapPoint | null>(null);
   if (!enabled) return null;
   return (
-    <div className="no-print overflow-hidden rounded-xl border" style={{ height }} data-testid="map">
+    <div className="no-print overflow-hidden rounded-xl border border-line" style={{ height }} data-testid="map">
       <Map defaultCenter={center} defaultZoom={12} mapId={env.googleMapId} gestureHandling="cooperative" mapTypeControl={false} streetViewControl={false}>
         {points.map((p) => (
           <AdvancedMarker key={p.id} position={p} title={p.title} onClick={() => setOpen(p)}>
@@ -49,7 +50,7 @@ export function PlacesMap({ points, center, height = 320 }: { points: MapPoint[]
         ))}
         {open && (
           <InfoWindow position={open} onCloseClick={() => setOpen(null)} headerContent={<strong>{open.title}</strong>}>
-            {open.href && <a href={open.href} target="_blank" rel="noreferrer" className="text-sm text-sky-700 underline">Open in Google Maps</a>}
+            {open.href && <a href={open.href} target="_blank" rel="noreferrer" className="text-sm text-accent underline">Open in Google Maps</a>}
           </InfoWindow>
         )}
         <FitBounds points={points} />

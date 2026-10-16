@@ -22,7 +22,7 @@ import { AttractionsList } from '@/components/AttractionsList';
 import { DAY_COLORS, PlacesMap, type MapPoint } from '@/components/maps/PlacesMap';
 import { PlaceSearch } from '@/components/maps/PlaceSearch';
 import { StaysPanel } from '@/components/StaysPanel';
-import { Badge, Button, Card, ErrorNote, Input, Select, Spinner, Tabs } from '@/components/ui';
+import { Badge, Button, Card, ErrorNote, Input, Segmented, Select, Spinner, Tabs } from '@/components/ui';
 import { errorMessage } from '@/lib/utils';
 
 type Tab = 'itinerary' | 'stays' | 'summary';
@@ -37,14 +37,17 @@ export function TripPage() {
   const t = trip.data;
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold">{t.title}</h1>
-          <p className="text-sm text-stone-500">
-            {formatDate(t.startDate)} – {formatDate(t.endDate)} · {t.days.length} days · {t.adults} adults
-            {t.children ? `, ${t.children} children` : ''}
-          </p>
+    <div className="space-y-6">
+      <div className="space-y-5">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="eyebrow">
+              {formatDate(t.startDate)} – {formatDate(t.endDate)} · {t.days.length} days · {t.adults} adult{t.adults === 1 ? '' : 's'}
+              {t.children ? ` · ${t.children} child${t.children === 1 ? '' : 'ren'}` : ''}
+            </p>
+            <h1 className="mt-1.5 text-3xl font-extrabold sm:text-4xl">{t.title}</h1>
+          </div>
+          <Badge tone={t.status === 'planned' ? 'good' : 'default'} className="capitalize">{t.status === 'planned' ? 'Final' : 'Draft'}</Badge>
         </div>
         <Tabs<Tab>
           value={tab}
@@ -118,12 +121,12 @@ function ItineraryTab({ trip }: { trip: TripDetail }) {
           {activeDest && (
             <>
               <PlacesMap points={points} center={activeDest} height={260} />
-              <label className="no-print flex items-center gap-2 text-xs text-stone-500">
+              <label className="no-print flex items-center gap-2 text-xs text-muted">
                 <input type="checkbox" checked={wholeTrip} onChange={(e) => setWholeTrip(e.target.checked)} /> Show the whole trip on the map
               </label>
             </>
           )}
-          <div className="text-sm text-stone-500">
+          <div className="text-sm text-muted">
             Adding to <b>{formatDate(activeDay.dayDate)}</b> in <b>{destName(activeDay.destinationId)}</b>
           </div>
           {activeDest && (
@@ -181,20 +184,33 @@ function DayCard(props: {
   };
 
   return (
-    <Card className={`p-4 ${props.active ? 'ring-2 ring-brand-500' : ''}`} onClick={props.onActivate} data-testid={`day-${props.index}`}>
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <div className="text-xs font-semibold uppercase text-brand-600">Day {props.index + 1}</div>
-          <div className="font-semibold">{formatDate(day.dayDate, { weekday: 'long', day: 'numeric', month: 'long' })}</div>
+    <Card
+      className={`p-4 transition-shadow sm:p-5 ${props.active ? 'border-accent shadow-[0_0_0_1px_rgb(var(--accent))]' : 'hover:border-muted/50'}`}
+      onClick={props.onActivate}
+      data-testid={`day-${props.index}`}
+    >
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <span
+            className="grid h-10 w-10 shrink-0 place-items-center rounded-md font-mono text-sm font-semibold text-surface"
+            style={{ background: DAY_COLORS[props.index % DAY_COLORS.length] }}
+            aria-hidden
+          >
+            {String(props.index + 1).padStart(2, '0')}
+          </span>
+          <div>
+            <p className="eyebrow">Day {props.index + 1}</p>
+            <p className="font-display text-lg font-bold leading-tight">{formatDate(day.dayDate, { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           {props.weather ? (
-            <Badge tone="blue" title="Open-Meteo forecast">
+            <Badge tone="accent" title="Open-Meteo forecast">
               <CloudSun className="h-3 w-3" /> {props.weather.summary} · {Math.round(props.weather.tempMinC ?? 0)}–{Math.round(props.weather.tempMaxC ?? 0)}°C
               {props.weather.precipitationProbability != null && ` · ${props.weather.precipitationProbability}% rain`}
             </Badge>
           ) : (
-            <Badge title="Forecast is available up to 16 days ahead">No forecast yet</Badge>
+            <Badge title="Forecasts cover the next 16 days">Forecast closer to the date</Badge>
           )}
           <Select
             className="no-print h-8"
@@ -209,15 +225,15 @@ function DayCard(props: {
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
         <SortableContext items={items.map((i) => i.id)} strategy={verticalListSortingStrategy}>
-          <ol className="mt-3 space-y-1">
-            {items.length === 0 && <li className="rounded-lg border border-dashed p-4 text-center text-sm text-stone-400">Select this day, then add places from the panel →</li>}
+          <ol className="mt-4 space-y-1">
+            {items.length === 0 && <li className="rounded-lg border border-dashed border-line p-4 text-center text-sm text-muted">Nothing planned yet. Select this day and add places from the panel.</li>}
             {items.map((item, i) => {
               const leg = props.legs.find((l) => l.toItemId === item.id);
               return (
                 <li key={item.id}>
                   {i > 0 && leg && leg.durationSeconds != null && (
-                    <div className="flex items-center gap-1 py-1 pl-8 text-xs text-stone-500">
-                      <Car className="h-3 w-3" /> {formatDuration(leg.durationSeconds)} · {formatDistance(leg.distanceMeters)}
+                    <div className="ml-[18px] flex items-center gap-1.5 border-l-2 border-dotted border-line py-1.5 pl-5 font-mono text-xs text-muted">
+                      <Car className="h-3.5 w-3.5" /> {formatDuration(leg.durationSeconds)} · {formatDistance(leg.distanceMeters)} by road
                     </div>
                   )}
                   <SortableItem item={item} days={props.allDays} currentDayId={day.id} tripId={props.tripId} />
@@ -237,7 +253,7 @@ function DayCard(props: {
           setNote('');
         }}
       >
-        <Input className="h-8" placeholder="Add a note (e.g. 'early start for sunrise')" value={note} onChange={(e) => setNote(e.target.value)} />
+        <Input className="h-9" aria-label="Add a note" placeholder="Add a note, e.g. leave by 5:30 for sunrise" value={note} onChange={(e) => setNote(e.target.value)} />
         <Button size="sm" variant="outline" type="submit"><StickyNote className="h-4 w-4" /></Button>
       </form>
     </Card>
@@ -252,14 +268,14 @@ function SortableItem({ item, days, currentDayId, tripId }: { item: TripItem; da
     <div
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
-      className="flex items-center gap-2 rounded-lg border bg-stone-50 p-2"
+      className="flex items-center gap-2 rounded-md border border-line bg-surface p-2"
     >
-      <button className="no-print cursor-grab text-stone-400" {...attributes} {...listeners} aria-label="Drag to reorder">
+      <button className="no-print cursor-grab text-muted" {...attributes} {...listeners} aria-label="Drag to reorder">
         <GripVertical className="h-4 w-4" />
       </button>
-      {item.kind === 'note' ? <StickyNote className="h-4 w-4 text-amber-500" /> : item.kind === 'stay' ? <Hotel className="h-4 w-4" /> : null}
-      <span className={`flex-1 text-sm ${item.kind === 'note' ? 'italic text-stone-600' : 'font-medium'}`}>{item.title}</span>
-      {mapsUri && <a href={mapsUri} target="_blank" rel="noreferrer" className="no-print text-stone-400 hover:text-stone-700"><ExternalLink className="h-4 w-4" /></a>}
+      {item.kind === 'note' ? <StickyNote className="h-4 w-4 text-highlight" /> : item.kind === 'stay' ? <Hotel className="h-4 w-4" /> : null}
+      <span className={`flex-1 text-sm ${item.kind === 'note' ? 'italic text-muted' : 'font-medium'}`}>{item.title}</span>
+      {mapsUri && <a href={mapsUri} target="_blank" rel="noreferrer" className="no-print text-muted hover:text-ink"><ExternalLink className="h-4 w-4" /></a>}
       <Select
         className="no-print h-7 text-xs"
         value={currentDayId}
@@ -268,7 +284,7 @@ function SortableItem({ item, days, currentDayId, tripId }: { item: TripItem; da
       >
         {days.map((d, i) => <option key={d.id} value={d.id}>Day {i + 1}</option>)}
       </Select>
-      <button className="no-print text-stone-400 hover:text-red-600" onClick={() => m.removeItem.mutate(item.id)} aria-label={`Remove ${item.title}`}>
+      <button className="no-print text-muted hover:text-danger" onClick={() => m.removeItem.mutate(item.id)} aria-label={`Remove ${item.title}`}>
         <Trash2 className="h-4 w-4" />
       </button>
     </div>
@@ -288,18 +304,18 @@ function StaysTab({ trip }: { trip: TripDetail }) {
   return (
     <div className="space-y-4">
       {trip.stays.length > 0 && (
-        <Card className="p-4">
-          <h3 className="mb-2 font-semibold">Saved stays</h3>
+        <Card className="p-4 sm:p-5">
+          <h3 className="eyebrow mb-1">Saved stays</h3>
           <SavedStays trip={trip} onRemove={(id) => m.removeStay.mutate(id)} />
         </Card>
       )}
-      <div className="flex flex-wrap gap-2">
-        {destIds.map((id) => (
-          <Button key={id} size="sm" variant={id === destId ? 'secondary' : 'outline'} onClick={() => setDestId(id)}>
-            {destinations.data?.find((d) => d.id === id)?.name ?? id}
-          </Button>
-        ))}
-      </div>
+      {destIds.length > 1 && (
+        <Segmented<string>
+          value={destId}
+          onChange={setDestId}
+          options={destIds.map((id) => ({ id, label: destinations.data?.find((d) => d.id === id)?.name ?? id }))}
+        />
+      )}
       {win && dest && (
         <StaysPanel
           key={destId}
@@ -331,15 +347,20 @@ function StaysTab({ trip }: { trip: TripDetail }) {
 
 function SavedStays({ trip, onRemove }: { trip: TripDetail; onRemove?: (id: string) => void }) {
   return (
-    <ul className="divide-y">
+    <ul className="divide-y divide-line">
       {trip.stays.map((s) => (
-        <li key={s.id} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm">
-          <div>
-            <div className="font-medium">{s.name}</div>
-            <div className="text-stone-500">
+        <li key={s.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
+          <div className="min-w-0">
+            <p className="font-semibold">{s.name}</p>
+            <p className="text-sm text-muted">
               {formatDate(s.checkIn)} → {formatDate(s.checkOut)}
-              {s.chosenPlatform && ` · ${formatInr(s.priceAtSaveInr)} on ${s.chosenPlatform} (when saved)`}
-            </div>
+              {s.chosenPlatform && (
+                <>
+                  {' · '}
+                  <span className="num font-mono text-ink">{formatInr(s.priceAtSaveInr)}</span> on {s.chosenPlatform} when saved
+                </>
+              )}
+            </p>
           </div>
           <div className="no-print flex gap-2">
             {s.deepLink && (
@@ -374,30 +395,35 @@ function SummaryTab({ trip }: { trip: TripDetail }) {
         )}
       </div>
 
-      <Card className="p-5">
-        <h2 className="mb-3 text-lg font-semibold">Your itinerary</h2>
-        <ol className="space-y-3">
+      <Card className="p-5 sm:p-6">
+        <h2 className="text-2xl font-bold">Your itinerary</h2>
+        <ol className="mt-4 space-y-4">
           {trip.days.map((d, i) => (
-            <li key={d.id}>
-              <div className="font-medium">Day {i + 1} · {formatDate(d.dayDate)} · {destName(d.destinationId)}</div>
-              <ul className="ml-5 list-disc text-sm text-stone-700">
-                {d.items.length === 0 && <li className="text-stone-400">Free day</li>}
-                {d.items.map((it) => <li key={it.id} className={it.kind === 'note' ? 'italic' : ''}>{it.title}</li>)}
+            <li key={d.id} className="grid grid-cols-[3rem_1fr] gap-3">
+              <span className="font-mono text-sm font-semibold" style={{ color: DAY_COLORS[i % DAY_COLORS.length] }}>
+                {String(i + 1).padStart(2, '0')}
+              </span>
+              <div>
+              <p className="font-semibold">{formatDate(d.dayDate)} · {destName(d.destinationId)}</p>
+              <ul className="mt-1 list-disc pl-5 text-ink marker:text-muted">
+                {d.items.length === 0 && <li className="text-muted">Free day</li>}
+                {d.items.map((it) => <li key={it.id} className={it.kind === 'note' ? 'italic text-muted' : ''}>{it.title}</li>)}
               </ul>
+              </div>
             </li>
           ))}
         </ol>
         {trip.stays.length > 0 && (
           <>
-            <h3 className="mt-5 font-semibold">Stays</h3>
+            <h3 className="eyebrow mt-6">Stays</h3>
             <SavedStays trip={trip} />
           </>
         )}
       </Card>
 
-      <div className="space-y-2">
-        <h2 className="text-lg font-semibold">Contact an agency for this trip</h2>
-        <p className="text-sm text-stone-600">
+      <div className="space-y-1.5 pt-2">
+        <h2 className="text-2xl font-bold">Hand it to a local agency</h2>
+        <p className="max-w-2xl text-muted">
           Share this itinerary with a local operator for transport, guides or a package quote. Listings come live from Google
           with ratings and reviews; Tamil Nadu Tourism (TTDC) is the government option.
         </p>

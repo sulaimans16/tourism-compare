@@ -39,22 +39,26 @@ export function LoginPage() {
   };
 
   return (
-    <div className="mx-auto max-w-md">
-      <Card className="space-y-4 p-6">
-        <h1 className="text-xl font-semibold">Sign in to save your itinerary</h1>
+    <div className="mx-auto max-w-md py-6">
+      <p className="eyebrow">Free · no booking fees</p>
+      <h1 className="mt-1 text-3xl font-extrabold">Sign in to save your trip</h1>
+      <p className="mt-2 text-muted">Your itinerary, saved stays and agency list stay with your account on every device.</p>
+      <Card className="mt-6 space-y-4 p-5 sm:p-6">
         <Button variant="outline" className="w-full" onClick={() => supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo } })}>
           Continue with Google
         </Button>
-        <div className="text-center text-xs text-stone-400">or use email</div>
+        <div className="flex items-center gap-3 text-xs text-muted">
+          <span className="h-px flex-1 bg-line" /> or use email <span className="h-px flex-1 bg-line" />
+        </div>
         <div>
-          <Label>Email</Label>
-          <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" disabled={sent} />
+          <Label htmlFor="login-email">Email</Label>
+          <Input id="login-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" disabled={sent} />
         </div>
         {sent ? (
           <>
             <div>
-              <Label>6-digit code (or click the link in the email)</Label>
-              <Input inputMode="numeric" value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} />
+              <Label htmlFor="login-code">6-digit code (or open the link in the email)</Label>
+              <Input id="login-code" className="font-mono tracking-[0.3em]" inputMode="numeric" autoComplete="one-time-code" value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} />
             </div>
             <Button className="w-full" loading={busy} disabled={code.length < 6} onClick={verify}>Verify & continue</Button>
           </>

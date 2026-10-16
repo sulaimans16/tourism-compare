@@ -2,7 +2,144 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+  Layout concept: a trip ledger. Left-aligned headings, mono labels for real data
+  (dates, nights, km, ₹), and the price comparison drawn as a ticket stub.
+  Colours: peacock blue for action, marigold for "cheapest", a faint kolam dot grid on paper.
+  Values are RGB triplets so Tailwind can apply alpha (bg-accent/10).
+*/
+:root {
+  --paper: 243 246 245;
+  --surface: 255 255 255;
+  --sunken: 232 238 236;
+  --ink: 14 35 41;
+  --muted: 86 104 108;
+  --line: 211 222 219;
+  --accent: 11 110 117; /* peacock */
+  --on-accent: 255 255 255;
+  --highlight: 176 112 0; /* marigold, darkened for text contrast */
+  --highlight-soft: 251 239 211;
+  --good: 31 122 74;
+  --good-soft: 221 241 229;
+  --danger: 180 35 24;
+  --danger-soft: 253 236 234;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --paper: 10 23 27;
+    --surface: 16 35 42;
+    --sunken: 12 29 34;
+    --ink: 228 238 236;
+    --muted: 147 167 170;
+    --line: 34 56 63;
+    --accent: 59 178 186;
+    --on-accent: 4 37 42;
+    --highlight: 240 180 60;
+    --highlight-soft: 58 44 14;
+    --good: 76 195 135;
+    --good-soft: 16 48 31;
+    --danger: 240 116 102;
+    --danger-soft: 58 21 18;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme='dark'] {
+  --paper: 10 23 27;
+  --surface: 16 35 42;
+  --sunken: 12 29 34;
+  --ink: 228 238 236;
+  --muted: 147 167 170;
+  --line: 34 56 63;
+  --accent: 59 178 186;
+  --on-accent: 4 37 42;
+  --highlight: 240 180 60;
+  --highlight-soft: 58 44 14;
+  --good: 76 195 135;
+  --good-soft: 16 48 31;
+  --danger: 240 116 102;
+  --danger-soft: 58 21 18;
+  color-scheme: dark;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-paper font-sans text-ink antialiased;
+    font-size: 16px;
+    line-height: 1.55;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply font-display text-ink;
+    text-wrap: balance;
+    letter-spacing: -0.01em;
+  }
+  :focus-visible {
+    outline: 2px solid rgb(var(--accent));
+    outline-offset: 2px;
+  }
+  ::selection {
+    background: rgb(var(--accent) / 0.2);
+  }
+}
+
+@layer components {
+  /* Uppercase data label: dates, nights, km. */
+  .eyebrow {
+    @apply font-mono text-[11px] font-medium uppercase tracking-[0.12em] text-muted;
+  }
+  .num {
+    font-variant-numeric: tabular-nums;
+  }
+  /* Kolam: the dot grid women draw at the threshold each morning. Used once, behind the hero. */
+  .kolam {
+    background-image: radial-gradient(rgb(var(--ink) / 0.14) 1.1px, transparent 1.3px);
+    background-size: 18px 18px;
+  }
+  /* Ticket perforation between the stub and the body of the price comparison. */
+  .perforation {
+    position: relative;
+    border-top: 2px dashed rgb(var(--line));
+  }
+  .perforation::before,
+  .perforation::after {
+    content: '';
+    position: absolute;
+    top: -11px;
+    width: 20px;
+    height: 20px;
+    border-radius: 9999px;
+    background: rgb(var(--surface));
+    border: 1px solid rgb(var(--line));
+  }
+  .perforation::before {
+    left: -27px;
+  }
+  .perforation::after {
+    right: -27px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 @media print {
-  .no-print { display: none !important; }
-  body { background: white; }
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: white;
+  }
 }
