@@ -1,0 +1,11 @@
+**/node_modules
+**/dist
+**/.turbo
+**/build
+**/.gradle
+.git
+.env
+.env.*
+apps/mobile
+test-results
+playwright-report

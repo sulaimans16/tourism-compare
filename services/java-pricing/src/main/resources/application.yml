@@ -1,5 +1,5 @@
 server:
-  port: ${PRICING_PORT:8090}
+  port: ${PORT:${PRICING_PORT:8090}}
   shutdown: graceful
 
 spring:

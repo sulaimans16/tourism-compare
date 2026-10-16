@@ -1,0 +1,25 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "services": {
+    "web": {
+      "root": ".",
+      "runtime": "container",
+      "entrypoint": "apps/web/Dockerfile.vercel"
+    },
+    "api": {
+      "root": ".",
+      "runtime": "container",
+      "entrypoint": "services/node-api/Dockerfile.vercel",
+      "bindings": [{ "type": "service", "service": "pricing", "format": "url", "env": "PRICING_SERVICE_URL" }]
+    },
+    "pricing": {
+      "root": "services/java-pricing",
+      "runtime": "container",
+      "entrypoint": "Dockerfile.vercel"
+    }
+  },
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": { "service": "api" } },
+    { "source": "/(.*)", "destination": { "service": "web" } }
+  ]
+}

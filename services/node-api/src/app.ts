@@ -23,12 +23,17 @@ export async function buildApp(deps: Deps, opts: { logger?: boolean } = {}): Pro
   await app.register(rateLimit, { max: 120, timeWindow: '1 minute' });
 
   app.setErrorHandler(errorHandler);
-  app.get('/health', async () => ({ ok: true }));
 
-  destinationRoutes(app, deps);
-  stayRoutes(app, deps);
-  goRoutes(app, deps);
-  tripRoutes(app, deps);
+  await app.register(
+    async (api) => {
+      api.get('/health', async () => ({ ok: true }));
+      destinationRoutes(api, deps);
+      stayRoutes(api, deps);
+      goRoutes(api, deps);
+      tripRoutes(api, deps);
+    },
+    { prefix: deps.cfg.API_BASE_PATH },
+  );
 
   return app;
 }

@@ -1,0 +1,16 @@
+# Vercel container service "pricing" (internal only; reached by "api" through a service binding).
+FROM eclipse-temurin:21-jdk AS build
+WORKDIR /src
+COPY gradlew settings.gradle.kts build.gradle.kts ./
+COPY gradle gradle
+RUN ./gradlew --no-daemon dependencies > /dev/null
+COPY src src
+RUN ./gradlew --no-daemon bootJar -x test
+
+FROM eclipse-temurin:21-jre
+WORKDIR /app
+ENV PORT=80
+COPY --from=build /src/build/libs/java-pricing.jar app.jar
+EXPOSE 80
+# Scale-to-zero friendly: quick JIT warm-up and a small GC for a 1 vCPU / 2 GB instance.
+ENTRYPOINT ["java", "-XX:TieredStopAtLevel=1", "-XX:+UseSerialGC", "-XX:MaxRAMPercentage=75", "-Dspring.main.banner-mode=off", "-jar", "app.jar"]

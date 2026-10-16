@@ -37,3 +37,14 @@ describe('config', () => {
     expect(() => loadConfig({})).toThrow(/GOOGLE_MAPS_API_KEY|SUPABASE_URL/);
   });
 });
+
+describe('config for Vercel', () => {
+  const base = { SUPABASE_URL: 'https://x.supabase.co', SUPABASE_ANON_KEY: 'a', GOOGLE_MAPS_API_KEY: 'g', PRICING_SERVICE_TOKEN: 'x'.repeat(16) };
+  it('derives the public URL from the Vercel production domain and base path', () => {
+    const c = loadConfig({ ...base, API_BASE_PATH: '/api', VERCEL_PROJECT_PRODUCTION_URL: 'yatra.vercel.app' });
+    expect(c.PUBLIC_API_URL).toBe('https://yatra.vercel.app/api');
+  });
+  it('prefers an explicit PUBLIC_API_URL', () => {
+    expect(loadConfig({ ...base, PUBLIC_API_URL: 'https://api.example.com/' }).PUBLIC_API_URL).toBe('https://api.example.com');
+  });
+});

@@ -129,3 +129,13 @@ describe('trips', () => {
     expect((await app.inject('/trips')).statusCode).toBe(401);
   });
 });
+
+describe('base path', () => {
+  it('mounts every route under API_BASE_PATH', async () => {
+    const deps = makeDeps(fakeFetch({}).fn);
+    const app = await buildApp({ ...deps, cfg: { ...deps.cfg, API_BASE_PATH: '/api' } }, { logger: false });
+    expect((await app.inject('/api/health')).statusCode).toBe(200);
+    expect((await app.inject('/api/destinations')).statusCode).toBe(200);
+    expect((await app.inject('/destinations')).statusCode).toBe(404);
+  });
+});

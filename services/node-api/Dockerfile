@@ -7,7 +7,7 @@ COPY packages/types packages/types
 COPY services/node-api services/node-api
 RUN pnpm install --frozen-lockfile --filter @tc/node-api...
 RUN pnpm --filter @tc/types build && pnpm --filter @tc/node-api build
-RUN pnpm deploy --filter @tc/node-api --prod /out
+RUN pnpm deploy --legacy --filter @tc/node-api --prod /out
 
 FROM node:22-alpine
 WORKDIR /app

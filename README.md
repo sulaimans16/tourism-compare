@@ -131,6 +131,29 @@ providers.
 
 ## Deployment
 
+### Vercel (everything in one project)
+
+`vercel.json` defines three [Vercel Services](https://vercel.com/docs/services) (beta), each built from a Dockerfile:
+
+| Service | Dockerfile | Public route |
+| --- | --- | --- |
+| `web` | `apps/web/Dockerfile.vercel` (nginx serving the Vite build) | `/*` |
+| `api` | `services/node-api/Dockerfile.vercel` (`API_BASE_PATH=/api`) | `/api/*` |
+| `pricing` | `services/java-pricing/Dockerfile.vercel` | none; `api` reaches it via a service binding that injects `PRICING_SERVICE_URL` |
+
+Setup:
+1. Import the GitHub repo in Vercel and set **Framework Preset → Services** (Settings → Build and Deployment).
+2. Environment variables (Settings → Environment Variables), shared by all services:
+   - `SUPABASE_URL`, `SUPABASE_ANON_KEY` (public)
+   - `SUPABASE_SERVICE_ROLE_KEY` (**sensitive**). The API and pricing services use it to load SerpApi, Google and internal secrets from Supabase Vault.
+   - `GOOGLE_MAPS_BROWSER_KEY`, `GOOGLE_MAP_ID` (optional, for maps; add the Vercel domain to the key's allowed referrers)
+3. Deploy. The web container writes `/env.js` from these variables at start-up, so no key is baked into the build.
+4. Add the Vercel domain to Supabase Auth → URL Configuration (site URL and redirect URLs).
+
+Pricing scales to zero after about 5 idle minutes, so the first price search after a quiet spell includes a 3–5 s JVM start.
+
+### Other hosts
+
 - **Web** → Vercel (`apps/web/vercel.json`; set root directory to `apps/web`) or Netlify. Set `VITE_*` env vars.
 - **node-api + java-pricing + Redis** → Render (`render.yaml` blueprint). java-pricing is a private service; node-api
   reaches it over the private network. Fly.io or Cloud Run work with the same Dockerfiles.
