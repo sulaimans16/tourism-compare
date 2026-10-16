@@ -21,6 +21,8 @@ begin
 end;
 $$;
 
+revoke execute on function public.handle_new_user() from public, anon, authenticated;
+
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
@@ -130,7 +132,7 @@ create table public.outbound_clicks (
 );
 
 -- ---------- updated_at ----------
-create function public.touch_updated_at() returns trigger language plpgsql as $$
+create function public.touch_updated_at() returns trigger language plpgsql set search_path = public as $$
 begin new.updated_at = now(); return new; end; $$;
 create trigger trips_touch before update on public.trips
   for each row execute function public.touch_updated_at();

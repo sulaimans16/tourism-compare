@@ -8,10 +8,7 @@ services:
     dockerContext: .
     healthCheckPath: /health
     envVars:
-      - { key: SUPABASE_URL, sync: false }
       - { key: SUPABASE_ANON_KEY, sync: false }
-      - { key: SUPABASE_SERVICE_ROLE_KEY, sync: false }
-      - { key: GOOGLE_MAPS_API_KEY, sync: false }
       - { key: PUBLIC_API_URL, sync: false }
       - { key: CORS_ORIGINS, sync: false }
       - { key: CACHE_BACKEND, value: redis }
@@ -27,9 +24,6 @@ services:
     dockerfilePath: services/java-pricing/Dockerfile
     dockerContext: services/java-pricing
     envVars:
-      - { key: SERPAPI_API_KEY, sync: false }
-      - { key: SUPABASE_URL, sync: false }
-      - { key: SUPABASE_SERVICE_ROLE_KEY, sync: false }
       - { key: PRICING_CACHE_BACKEND, value: redis }
       - fromGroup: pricing-shared
       - key: REDIS_URL
@@ -40,7 +34,10 @@ services:
     ipAllowList: []
     maxmemoryPolicy: allkeys-lru
 
+# API keys and the node-api <-> java-pricing token are loaded from Supabase Vault at startup
+# (supabase/migrations/20261017000000_app_secrets.sql); only Supabase credentials live here.
 envVarGroups:
   - name: pricing-shared
     envVars:
-      - { key: PRICING_SERVICE_TOKEN, generateValue: true }
+      - { key: SUPABASE_URL, sync: false }
+      - { key: SUPABASE_SERVICE_ROLE_KEY, sync: false }

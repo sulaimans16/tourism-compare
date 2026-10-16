@@ -1,4 +1,4 @@
-import { addDays, useDestinationAgencies } from '@tc/core';
+import { addDays, useAttractions, useDestinationAgencies } from '@tc/core';
 import { useApi } from '@tc/core';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
@@ -6,6 +6,7 @@ import { useParams } from 'react-router-dom';
 import { AgencyList } from '@/components/AgencyList';
 import { AttractionsList } from '@/components/AttractionsList';
 import { StaysPanel } from '@/components/StaysPanel';
+import { PlacesMap } from '@/components/maps/PlacesMap';
 import { Card, ErrorNote, Input, Label, Spinner, Tabs } from '@/components/ui';
 import { errorMessage } from '@/lib/utils';
 
@@ -21,6 +22,7 @@ export function DestinationPage() {
   const [checkOut, setCheckOut] = useState(addDays(today(), 16));
   const [adults, setAdults] = useState(2);
   const agencies = useDestinationAgencies(tab === 'agencies' ? id : undefined);
+  const attractions = useAttractions(tab === 'attractions' ? id : undefined);
 
   if (dest.isLoading) return <Spinner />;
   if (dest.error || !dest.data) return <ErrorNote>{errorMessage(dest.error) || 'Destination not found'}</ErrorNote>;
@@ -37,7 +39,17 @@ export function DestinationPage() {
       </div>
       <Tabs<Tab> value={tab} onChange={setTab} tabs={[{ id: 'attractions', label: 'Things to do' }, { id: 'stays', label: 'Stays & prices' }, { id: 'agencies', label: 'Agencies' }]} />
 
-      {tab === 'attractions' && <AttractionsList destinationId={d.id} />}
+      {tab === 'attractions' && (
+        <>
+          <PlacesMap
+            center={d}
+            points={(attractions.data?.places ?? [])
+              .filter((p) => p.lat != null && p.lng != null)
+              .map((p, i) => ({ id: p.placeId, lat: p.lat!, lng: p.lng!, title: p.name, label: String(i + 1), href: p.googleMapsUri }))}
+          />
+          <AttractionsList destinationId={d.id} />
+        </>
+      )}
       {tab === 'stays' && (
         <>
           <Card className="flex flex-wrap gap-3 p-4">

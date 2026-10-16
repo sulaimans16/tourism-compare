@@ -19,6 +19,7 @@
     "@tc/api-client": "workspace:*",
     "@tc/core": "workspace:*",
     "@tc/types": "workspace:*",
+    "@vis.gl/react-google-maps": "^1.10.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.453.0",
     "react": "19.3.0",
@@ -28,6 +29,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.48.1",
+    "@types/google.maps": "^3.66.7",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^4.3.3",

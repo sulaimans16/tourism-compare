@@ -40,6 +40,8 @@ test('explore Madurai: attractions, live stay comparison, agencies', async ({ pa
   await page.getByTestId('destinations').getByRole('link', { name: 'Explore' }).first().click();
   await expect(page.getByRole('heading', { name: 'Madurai' })).toBeVisible();
   await expect(page.getByTestId('attractions')).toContainText(live ? /Meenakshi/i : 'Meenakshi Amman Temple');
+  // Without VITE_GOOGLE_MAPS_BROWSER_KEY the map is hidden and nothing else breaks.
+  if (!process.env.VITE_GOOGLE_MAPS_BROWSER_KEY) await expect(page.getByTestId('map')).toHaveCount(0);
 
   await page.getByRole('tab', { name: 'Stays & prices' }).click();
   await page.getByRole('button', { name: 'Compare prices' }).first().click({ timeout: 45_000 });

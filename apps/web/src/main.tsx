@@ -5,6 +5,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { App } from './App';
+import { MapsProvider } from './components/maps/MapsProvider';
 import './index.css';
 import { AuthProvider } from './lib/auth';
 import { env } from './lib/env';
@@ -21,9 +22,11 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <QueryClientProvider client={queryClient}>
       <ApiProvider client={api}>
         <AuthProvider>
-          <BrowserRouter>
-            <App />
-          </BrowserRouter>
+          <MapsProvider>
+            <BrowserRouter>
+              <App />
+            </BrowserRouter>
+          </MapsProvider>
         </AuthProvider>
       </ApiProvider>
     </QueryClientProvider>

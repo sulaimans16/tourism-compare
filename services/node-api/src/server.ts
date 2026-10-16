@@ -11,10 +11,12 @@ import { OpenMeteoClient } from './clients/openMeteo.js';
 import { PricingClient } from './clients/pricing.js';
 import { supabaseDestinations } from './repos/destinations.js';
 import { TripRepo } from './repos/trips.js';
+import { loadVaultSecrets } from './secrets.js';
 
 // Respect HTTPS_PROXY/NO_PROXY for outbound calls (corporate networks, sandboxes).
 if (process.env.HTTPS_PROXY || process.env.HTTP_PROXY) setGlobalDispatcher(new EnvHttpProxyAgent());
 
+const fromVault = await loadVaultSecrets();
 const cfg = loadConfig();
 const db = createDb(cfg);
 const cache =
@@ -47,4 +49,5 @@ const deps: Deps = {
 };
 
 const app = await buildApp(deps);
+if (fromVault.length) app.log.info({ keys: fromVault }, 'loaded secrets from Supabase Vault');
 await app.listen({ port: cfg.PORT, host: cfg.HOST });

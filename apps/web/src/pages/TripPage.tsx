@@ -19,6 +19,8 @@ import { useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { AgencyList } from '@/components/AgencyList';
 import { AttractionsList } from '@/components/AttractionsList';
+import { DAY_COLORS, PlacesMap, type MapPoint } from '@/components/maps/PlacesMap';
+import { PlaceSearch } from '@/components/maps/PlaceSearch';
 import { StaysPanel } from '@/components/StaysPanel';
 import { Badge, Button, Card, ErrorNote, Input, Select, Spinner, Tabs } from '@/components/ui';
 import { errorMessage } from '@/lib/utils';
@@ -71,6 +73,23 @@ function ItineraryTab({ trip }: { trip: TripDetail }) {
   const enrich = useTripEnrichment(trip.id, version);
   const destinations = useDestinations();
   const destName = (id: string) => destinations.data?.find((d) => d.id === id)?.name ?? id;
+  const [wholeTrip, setWholeTrip] = useState(false);
+  const activeDest = destinations.data?.find((d) => d.id === activeDay?.destinationId);
+  const points: MapPoint[] = trip.days.flatMap((day, dayIdx) =>
+    wholeTrip || day.id === activeDay?.id
+      ? day.items
+          .filter((i) => i.lat != null && i.lng != null)
+          .map((i, n) => ({
+            id: i.id,
+            lat: i.lat!,
+            lng: i.lng!,
+            title: `Day ${dayIdx + 1}: ${i.title}`,
+            label: wholeTrip ? String(dayIdx + 1) : String(n + 1),
+            color: DAY_COLORS[dayIdx % DAY_COLORS.length],
+            href: (i.meta as { googleMapsUri?: string }).googleMapsUri ?? null,
+          }))
+      : [],
+  );
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
@@ -96,9 +115,29 @@ function ItineraryTab({ trip }: { trip: TripDetail }) {
       </div>
       {activeDay && (
         <aside className="no-print space-y-3 lg:sticky lg:top-20 lg:h-[calc(100vh-6rem)] lg:overflow-y-auto">
+          {activeDest && (
+            <>
+              <PlacesMap points={points} center={activeDest} height={260} />
+              <label className="no-print flex items-center gap-2 text-xs text-stone-500">
+                <input type="checkbox" checked={wholeTrip} onChange={(e) => setWholeTrip(e.target.checked)} /> Show the whole trip on the map
+              </label>
+            </>
+          )}
           <div className="text-sm text-stone-500">
             Adding to <b>{formatDate(activeDay.dayDate)}</b> in <b>{destName(activeDay.destinationId)}</b>
           </div>
+          {activeDest && (
+            <PlaceSearch
+              near={activeDest}
+              placeholder={`Search any place in or near ${activeDest.name}`}
+              onPick={(p) =>
+                m.addItem.mutate({
+                  dayId: activeDay.id,
+                  item: { kind: 'attraction', googlePlaceId: p.placeId, title: p.name, lat: p.lat, lng: p.lng, meta: { googleMapsUri: p.googleMapsUri, address: p.address } },
+                })
+              }
+            />
+          )}
           <AttractionsList
             compact
             destinationId={activeDay.destinationId}
