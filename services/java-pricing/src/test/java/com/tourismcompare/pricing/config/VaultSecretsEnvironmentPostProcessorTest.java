@@ -13,7 +13,9 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.logging.DeferredLogs;
+import org.springframework.boot.env.EnvironmentPostProcessor;
 import org.springframework.core.env.MapPropertySource;
+import org.springframework.core.io.support.SpringFactoriesLoader;
 import org.springframework.core.env.StandardEnvironment;
 
 class VaultSecretsEnvironmentPostProcessorTest {
@@ -63,6 +65,15 @@ class VaultSecretsEnvironmentPostProcessorTest {
         assertThatThrownBy(() -> new VaultSecretsEnvironmentPostProcessor(new DeferredLogs())
                 .postProcessEnvironment(env, new SpringApplication()))
                 .hasMessageContaining("app_secrets.sql");
+    }
+
+    @Test
+    void isRegisteredWithSpringBoot() {
+        var names = SpringFactoriesLoader.forDefaultResourceLocation()
+                .load(EnvironmentPostProcessor.class, SpringFactoriesLoader.ArgumentResolver.of(
+                        org.springframework.boot.logging.DeferredLogFactory.class, new DeferredLogs()))
+                .stream().map(p -> p.getClass().getName()).toList();
+        assertThat(names).contains(VaultSecretsEnvironmentPostProcessor.class.getName());
     }
 
     @Test
