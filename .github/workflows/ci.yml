@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  js:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm turbo run build --filter=./packages/*
+      - run: pnpm turbo run typecheck
+      - run: pnpm turbo run test
+      - name: Build web
+        run: pnpm --filter @tc/web build
+        env:
+          VITE_API_BASE_URL: https://api.example.com
+          VITE_SUPABASE_URL: https://example.supabase.co
+          VITE_SUPABASE_ANON_KEY: ci
+      - name: E2E (stubbed API)
+        run: pnpm --filter @tc/web exec playwright install --with-deps chromium && pnpm --filter @tc/web test:e2e
+
+  java:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: services/java-pricing } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 21, cache: gradle }
+      - run: ./gradlew test --no-daemon

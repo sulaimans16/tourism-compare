@@ -19,3 +19,5 @@ apps/mobile/android/
 # Playwright
 test-results/
 playwright-report/
+apps/mobile/expo-env.d.ts
+apps/mobile/dist/

@@ -1,5 +1,6 @@
 package com.tourismcompare.pricing.config;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import java.time.Duration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -13,7 +14,7 @@ import org.springframework.validation.annotation.Validated;
 @ConfigurationProperties(prefix = "pricing")
 public record PricingProperties(
         @NotBlank(message = "PRICING_SERVICE_TOKEN must be set") String serviceToken,
-        SerpApi serpapi,
+        @Valid SerpApi serpapi,
         Cache cache,
         Supabase supabase) {
 

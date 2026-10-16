@@ -1,0 +1,46 @@
+# Render Blueprint: node-api (public), java-pricing (private), Redis.
+# Secrets marked sync:false are entered in the Render dashboard.
+services:
+  - type: web
+    name: node-api
+    runtime: docker
+    dockerfilePath: services/node-api/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - { key: SUPABASE_URL, sync: false }
+      - { key: SUPABASE_ANON_KEY, sync: false }
+      - { key: SUPABASE_SERVICE_ROLE_KEY, sync: false }
+      - { key: GOOGLE_MAPS_API_KEY, sync: false }
+      - { key: PUBLIC_API_URL, sync: false }
+      - { key: CORS_ORIGINS, sync: false }
+      - { key: CACHE_BACKEND, value: redis }
+      - fromGroup: pricing-shared
+      # Private-network address of the java-pricing service, e.g. http://java-pricing:8090
+      - { key: PRICING_SERVICE_URL, sync: false }
+      - key: REDIS_URL
+        fromService: { type: redis, name: cache, property: connectionString }
+
+  - type: pserv
+    name: java-pricing
+    runtime: docker
+    dockerfilePath: services/java-pricing/Dockerfile
+    dockerContext: services/java-pricing
+    envVars:
+      - { key: SERPAPI_API_KEY, sync: false }
+      - { key: SUPABASE_URL, sync: false }
+      - { key: SUPABASE_SERVICE_ROLE_KEY, sync: false }
+      - { key: PRICING_CACHE_BACKEND, value: redis }
+      - fromGroup: pricing-shared
+      - key: REDIS_URL
+        fromService: { type: redis, name: cache, property: connectionString }
+
+  - type: redis
+    name: cache
+    ipAllowList: []
+    maxmemoryPolicy: allkeys-lru
+
+envVarGroups:
+  - name: pricing-shared
+    envVars:
+      - { key: PRICING_SERVICE_TOKEN, generateValue: true }

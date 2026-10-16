@@ -1,0 +1,37 @@
+# Local stack: docker compose -f infra/docker-compose.yml --env-file .env up --build
+# Supabase is hosted (or run `supabase start` separately); web/mobile run with `pnpm dev`.
+services:
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+
+  java-pricing:
+    build: ../services/java-pricing
+    environment:
+      SERPAPI_API_KEY: ${SERPAPI_API_KEY:?SERPAPI_API_KEY is required}
+      PRICING_SERVICE_TOKEN: ${PRICING_SERVICE_TOKEN:?PRICING_SERVICE_TOKEN is required}
+      PRICING_CACHE_BACKEND: redis
+      REDIS_URL: redis://redis:6379
+      SUPABASE_URL: ${SUPABASE_URL}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+    ports: ["8090:8090"]
+    depends_on: [redis]
+
+  node-api:
+    build:
+      context: ..
+      dockerfile: services/node-api/Dockerfile
+    environment:
+      PORT: 8080
+      PUBLIC_API_URL: ${PUBLIC_API_URL:-http://localhost:8080}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
+      SUPABASE_URL: ${SUPABASE_URL:?SUPABASE_URL is required}
+      SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY:?SUPABASE_ANON_KEY is required}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+      GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY:?GOOGLE_MAPS_API_KEY is required}
+      PRICING_SERVICE_URL: http://java-pricing:8090
+      PRICING_SERVICE_TOKEN: ${PRICING_SERVICE_TOKEN}
+      CACHE_BACKEND: redis
+      REDIS_URL: redis://redis:6379
+    ports: ["8080:8080"]
+    depends_on: [java-pricing, redis]
