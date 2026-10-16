@@ -1,4 +1,4 @@
-# Vercel container service "web". Build context: repo root (see /vercel.json).
+# Vercel container service "web". Lives at the repo root because Vercel builds from the Dockerfile's folder.
 FROM node:22-alpine AS build
 RUN corepack enable
 WORKDIR /repo

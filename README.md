@@ -137,8 +137,8 @@ providers.
 
 | Service | Dockerfile | Public route |
 | --- | --- | --- |
-| `web` | `apps/web/Dockerfile.vercel` (nginx serving the Vite build) | `/*` |
-| `api` | `services/node-api/Dockerfile.vercel` (`API_BASE_PATH=/api`) | `/api/*` |
+| `web` | `Dockerfile.web` (nginx serving the Vite build) | `/*` |
+| `api` | `Dockerfile.api` (`API_BASE_PATH=/api`) | `/api/*` |
 | `pricing` | `services/java-pricing/Dockerfile.vercel` | none; `api` reaches it via a service binding that injects `PRICING_SERVICE_URL` |
 
 Setup:

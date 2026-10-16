@@ -4,12 +4,12 @@
     "web": {
       "root": ".",
       "runtime": "container",
-      "entrypoint": "apps/web/Dockerfile.vercel"
+      "entrypoint": "Dockerfile.web"
     },
     "api": {
       "root": ".",
       "runtime": "container",
-      "entrypoint": "services/node-api/Dockerfile.vercel",
+      "entrypoint": "Dockerfile.api",
       "bindings": [{ "type": "service", "service": "pricing", "format": "url", "env": "PRICING_SERVICE_URL" }]
     },
     "pricing": {
