@@ -1,0 +1,115 @@
+openapi: 3.0.3
+info:
+  title: java-pricing (internal)
+  version: 0.1.0
+  description: Live stay search and cross-platform price comparison. Called only by node-api.
+servers:
+  - url: http://localhost:8090
+security:
+  - serviceToken: []
+paths:
+  /v1/stays/search:
+    get:
+      summary: Search stays (hotels or villas) for a destination and dates
+      parameters:
+        - { name: destination, in: query, required: true, schema: { type: string }, example: "Ooty, Tamil Nadu" }
+        - { name: checkIn, in: query, required: true, schema: { type: string, format: date } }
+        - { name: checkOut, in: query, required: true, schema: { type: string, format: date } }
+        - { name: adults, in: query, schema: { type: integer, default: 2, minimum: 1 } }
+        - { name: children, in: query, schema: { type: integer, default: 0, minimum: 0 } }
+        - { name: type, in: query, schema: { type: string, enum: [hotel, villa], default: hotel } }
+        - { name: sort, in: query, schema: { type: string, enum: [relevance, lowest_price, highest_rating] } }
+        - { name: minPrice, in: query, schema: { type: integer } }
+        - { name: maxPrice, in: query, schema: { type: integer } }
+        - { name: pageToken, in: query, schema: { type: string } }
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { $ref: "#/components/schemas/StaySearchResult" } } } }
+        "400": { $ref: "#/components/responses/Error" }
+        "429": { $ref: "#/components/responses/Error" }
+        "502": { $ref: "#/components/responses/Error" }
+  /v1/stays/{propertyToken}/offers:
+    get:
+      summary: Per-platform prices for one property, cheapest flagged
+      parameters:
+        - { name: propertyToken, in: path, required: true, schema: { type: string } }
+        - { name: destination, in: query, required: true, schema: { type: string } }
+        - { name: checkIn, in: query, required: true, schema: { type: string, format: date } }
+        - { name: checkOut, in: query, required: true, schema: { type: string, format: date } }
+        - { name: adults, in: query, schema: { type: integer, default: 2 } }
+        - { name: children, in: query, schema: { type: integer, default: 0 } }
+        - { name: type, in: query, schema: { type: string, enum: [hotel, villa], default: hotel } }
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { $ref: "#/components/schemas/StayOffers" } } } }
+        "404": { $ref: "#/components/responses/Error" }
+        "502": { $ref: "#/components/responses/Error" }
+components:
+  securitySchemes:
+    serviceToken: { type: apiKey, in: header, name: X-Service-Token }
+  responses:
+    Error:
+      description: Error
+      content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code: { type: string, example: PROVIDER_QUOTA_EXCEEDED }
+            message: { type: string }
+    StayProperty:
+      type: object
+      required: [propertyToken, name, amenities, images]
+      properties:
+        propertyToken: { type: string }
+        name: { type: string }
+        type: { type: string, nullable: true }
+        description: { type: string, nullable: true }
+        lat: { type: number, nullable: true }
+        lng: { type: number, nullable: true }
+        rating: { type: number, nullable: true }
+        reviews: { type: integer, nullable: true }
+        hotelClass: { type: integer, nullable: true }
+        amenities: { type: array, items: { type: string } }
+        images: { type: array, items: { type: string } }
+        lowestNightlyInr: { type: number, nullable: true }
+        lowestTotalInr: { type: number, nullable: true }
+        link: { type: string, nullable: true }
+    StaySearchResult:
+      type: object
+      required: [properties, fetchedAt, provider]
+      properties:
+        properties: { type: array, items: { $ref: "#/components/schemas/StayProperty" } }
+        nextPageToken: { type: string, nullable: true }
+        fetchedAt: { type: string, format: date-time }
+        provider: { type: string, example: serpapi_google_hotels }
+    StayOffer:
+      type: object
+      required: [platform, deepLink, official, freeCancellation, cheapest]
+      properties:
+        platform: { type: string, example: Booking.com }
+        platformLogo: { type: string, nullable: true }
+        nightlyInr: { type: number, nullable: true }
+        totalInr: { type: number, nullable: true }
+        deepLink: { type: string }
+        official: { type: boolean }
+        freeCancellation: { type: boolean }
+        cheapest: { type: boolean }
+    StayOffers:
+      type: object
+      required: [propertyToken, name, checkIn, checkOut, nights, offers, fetchedAt, provider]
+      properties:
+        propertyToken: { type: string }
+        name: { type: string }
+        address: { type: string, nullable: true }
+        phone: { type: string, nullable: true }
+        checkIn: { type: string, format: date }
+        checkOut: { type: string, format: date }
+        nights: { type: integer }
+        offers: { type: array, items: { $ref: "#/components/schemas/StayOffer" } }
+        cheapest: { allOf: [{ $ref: "#/components/schemas/StayOffer" }], nullable: true }
+        maxSavingsInr: { type: number, nullable: true }
+        fetchedAt: { type: string, format: date-time }
+        provider: { type: string }

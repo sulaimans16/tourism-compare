@@ -1,0 +1,7 @@
+{
+  "name": "@tc/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "description": "OpenAPI contracts shared by node-api, java-pricing and clients.",
+  "files": ["*.yaml"]
+}

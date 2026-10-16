@@ -1,0 +1,20 @@
+{
+  "type": "hotel",
+  "name": "Sample Hills Resort",
+  "address": "Ooty, Tamil Nadu",
+  "phone": "+91 00000 00000",
+  "featured_prices": [
+    {
+      "source": "Booking.com", "link": "https://booking.example/a", "logo": "https://logo/b.png",
+      "rate_per_night": { "extracted_lowest": 4300 }, "total_rate": { "extracted_lowest": 8600 },
+      "remarks": ["Free cancellation until 1 Dec"]
+    }
+  ],
+  "prices": [
+    { "source": "Booking.com", "link": "https://booking.example/b", "rate_per_night": { "extracted_lowest": 4400 }, "total_rate": { "extracted_lowest": 8800 } },
+    { "source": "Agoda", "link": "https://agoda.example/a", "rate_per_night": { "extracted_lowest": 4100 }, "total_rate": { "extracted_lowest": 8200 } },
+    { "source": "Sample Hills Resort", "official": true, "link": "https://example.org/book", "rate_per_night": { "extracted_lowest": 4100 } },
+    { "source": "MakeMyTrip", "link": "https://mmt.example/a", "rate_per_night": { "extracted_lowest": 5000 }, "total_rate": { "extracted_lowest": 10000 } },
+    { "source": "NoLink", "rate_per_night": { "extracted_lowest": 100 } }
+  ]
+}

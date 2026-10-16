@@ -1,0 +1,23 @@
+{
+  "search_metadata": { "status": "Success" },
+  "search_parameters": { "engine": "google_hotels", "q": "Ooty, Tamil Nadu", "gl": "in", "currency": "INR" },
+  "properties": [
+    {
+      "type": "hotel",
+      "name": "Sample Hills Resort",
+      "description": "Fixture shaped like a SerpApi google_hotels property",
+      "link": "https://example.org/hotel",
+      "property_token": "TOKEN_A",
+      "gps_coordinates": { "latitude": 11.41, "longitude": 76.70 },
+      "rate_per_night": { "lowest": "₹4,200", "extracted_lowest": 4200 },
+      "total_rate": { "lowest": "₹8,400", "extracted_lowest": 8400 },
+      "extracted_hotel_class": 4,
+      "overall_rating": 4.3,
+      "reviews": 1520,
+      "amenities": ["Free Wi-Fi", "Parking"],
+      "images": [{ "thumbnail": "https://example.org/t.jpg", "original_image": "https://example.org/o.jpg" }]
+    },
+    { "type": "vacation rental", "name": "No token listing" }
+  ],
+  "serpapi_pagination": { "current_from": 1, "current_to": 18, "next_page_token": "NEXT_1" }
+}

@@ -1,0 +1,21 @@
+node_modules/
+dist/
+build/
+.turbo/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+coverage/
+# Java
+services/java-pricing/build/
+services/java-pricing/.gradle/
+*.class
+# Expo
+apps/mobile/.expo/
+apps/mobile/ios/
+apps/mobile/android/
+# Playwright
+test-results/
+playwright-report/

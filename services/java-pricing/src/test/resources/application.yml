@@ -1,0 +1,18 @@
+pricing:
+  service-token: test-token
+  serpapi:
+    api-key: test-key
+    base-url: http://localhost:0
+    country: in
+    language: en
+    currency: INR
+    timeout: 5s
+  cache:
+    backend: memory
+    search-ttl: 1m
+    offers-ttl: 1m
+  supabase:
+    url: ""
+    service-role-key: ""
+management:
+  health.redis.enabled: false

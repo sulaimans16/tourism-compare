@@ -1,0 +1,37 @@
+server:
+  port: ${PRICING_PORT:8090}
+  shutdown: graceful
+
+spring:
+  application:
+    name: java-pricing
+  threads:
+    virtual:
+      enabled: true
+  data:
+    redis:
+      url: ${REDIS_URL:redis://localhost:6379}
+  autoconfigure:
+    # Redis is optional (pricing.cache.backend). Health check for it is disabled below.
+    exclude: []
+
+management:
+  endpoints.web.exposure.include: health,info
+  health.redis.enabled: false
+
+pricing:
+  service-token: ${PRICING_SERVICE_TOKEN:}
+  serpapi:
+    api-key: ${SERPAPI_API_KEY:}
+    base-url: ${SERPAPI_BASE_URL:https://serpapi.com}
+    country: in
+    language: en
+    currency: INR
+    timeout: 20s
+  cache:
+    backend: ${PRICING_CACHE_BACKEND:memory}   # memory | redis
+    search-ttl: 30m
+    offers-ttl: 20m
+  supabase:
+    url: ${SUPABASE_URL:}
+    service-role-key: ${SUPABASE_SERVICE_ROLE_KEY:}
