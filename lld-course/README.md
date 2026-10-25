@@ -27,3 +27,4 @@ java -cp out lesson01_playbook.parkinglot.Main
 ## Lessons
 
 - `lesson01_playbook/parkinglot`: Parking Lot built with the 6-step method (Strategy, value objects, injected Clock, coarse locking)
+- `lesson02_principles`: SOLID, composition over inheritance and the Law of Demeter, each as before/after code. Run `lesson02_principles.Main`. Exercise: refactor `lesson02_principles.exercise.OrderReportGenerator`
